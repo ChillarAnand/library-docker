@@ -1,0 +1,25 @@
+FROM python:3.7-slim
+
+WORKDIR /app
+
+ADD ./requirements.txt /app/requirements.txt
+
+RUN buildDeps='build-essential' \
+    && apt-get update -qq \
+    && apt-get install -qq -y $buildDeps --no-install-recommends \
+    && CFLAGS="-g0 -Wl,--strip-all -I/usr/include:/usr/local/include -L/usr/lib:/usr/local/lib" \
+        python -m pip install \
+        --no-cache-dir \
+        --compile \
+        --global-option=build_ext \
+        -r requirements.txt \
+    && apt-get purge -y --auto-remove $buildDeps \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -r requirements.txt
+
+ADD . /app
+
+EXPOSE 5000
+
+ENTRYPOINT [ "python" ]
+CMD [ "-m" "flask" "run" ]

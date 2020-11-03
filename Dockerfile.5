@@ -1,0 +1,24 @@
+FROM python:3.7-alpine
+
+WORKDIR /app
+
+ADD ./requirements.txt /app/requirements.txt
+
+RUN apk add build-base \
+    && CFLAGS="-g0 -Wl,--strip-all -I/usr/include:/usr/local/include -L/usr/lib:/usr/local/lib" \
+        python -m pip install \
+        --no-cache-dir \
+        --compile \
+        --global-option=build_ext \
+        --global-option="-j 4" \
+        -r requirements.txt \
+    && apk del build-base \
+    && rm -r requirements.txt
+
+
+ADD . /app
+
+EXPOSE 5000
+
+ENTRYPOINT [ "python" ]
+CMD [ "-m" "flask" "run" ]
